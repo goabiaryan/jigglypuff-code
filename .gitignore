@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+*.env
+!*.env.example
+*.gguf
+.modal_url
+.modal_urls/
