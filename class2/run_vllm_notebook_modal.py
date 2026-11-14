@@ -1,5 +1,3 @@
-"""Run the vLLM notebook on a Modal L4. Tokens live in the notebook's first code cell."""
-
 import ast
 import json
 import os
