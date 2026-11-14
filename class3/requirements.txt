@@ -1,0 +1,6 @@
+-e ./smol-vllm
+jupyter>=1.0.0
+ipykernel>=6.0.0
+crewai>=0.80
+nbconvert>=7.0
+playwright>=1.40
