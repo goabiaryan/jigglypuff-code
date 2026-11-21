@@ -3,7 +3,7 @@
 # Port layout must match gateway.py when VLLM_AUTO_ENGINE_ROUTING=1 (offsets from VLLM_BASE_URL's port).
 #
 # On your laptop: set VLLM_AUTO_ENGINE_ROUTING=1, keep VLLM_BASE_URL=http://127.0.0.1:8000, and
-# forward every port in the SSH tunnel (README). Crew --technique selects the upstream; engine flags
+# forward every port in the SSH tunnel (README). app.py --technique selects the upstream; engine flags
 # are not sent over HTTP — each process is started with the flags below.
 #
 # VRAM: six TinyLlama-sized servers may not fit one GPU; stop arms you are not testing, or run sequentially.

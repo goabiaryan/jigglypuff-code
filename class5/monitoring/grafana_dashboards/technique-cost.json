@@ -11,7 +11,7 @@
       "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
       "id": 1,
       "options": {
-        "content": "## Technique + cost (gateway)\n\n**Labels:** `technique` = request label (`X-Technique` / crew `--technique`). `server_profile` = `VLLM_SERVER_PROFILE` in `.env` (name for the vLLM server flag set you are running on Lambda). Align them when comparing.\n\n**Cost:** `duration_s/3600 * GPU_HOURLY_COST_USD` → `llm_gateway_estimated_gpu_cost_usd_total`.\n\n**Traces:** `X-Trace-Id` → Jaeger.\n\n**Optional:** `VLLM_BACKEND_MAP_JSON` routes each technique to a different vLLM base URL (e.g. another port on the instance).",
+        "content": "## Technique + cost (gateway)\n\n**Labels:** `technique` = request label (`X-Technique` / `app.py --technique`). `server_profile` = `VLLM_SERVER_PROFILE` in `.env` (name for the vLLM server flag set you are running on Lambda). Align them when comparing.\n\n**Cost:** `duration_s/3600 * GPU_HOURLY_COST_USD` → `llm_gateway_estimated_gpu_cost_usd_total`.\n\n**Traces:** `X-Trace-Id` → Jaeger.\n\n**Optional:** `VLLM_BACKEND_MAP_JSON` routes each technique to a different vLLM base URL (e.g. another port on the instance).",
         "mode": "markdown"
       },
       "title": "How to read this board",

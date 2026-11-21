@@ -98,7 +98,7 @@ def _exit_if_gateway_shows_bad_vllm_url() -> None:
             "  2. On your laptop: SSH tunnel Step 7 so vLLM is at http://127.0.0.1:8000\n"
             "  3. In .env set VLLM_BASE_URL=http://127.0.0.1:8000 (no trailing slash).\n"
             "  4. With the gateway running, save .env — it re-reads VLLM_BASE_URL on each request.\n"
-            "Then run crew again.\n",
+            "Then run app.py again.\n",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -148,7 +148,7 @@ def _wait_for_vllm_via_gateway() -> None:
                     continue
                 data = payload.get("data")
                 if isinstance(data, list) and len(data) > 0:
-                    print("vLLM is ready — running crew.\n", file=sys.stderr)
+                    print("vLLM is ready — running app.py.\n", file=sys.stderr)
                     return
                 last_note = "empty /v1/models data"
                 time.sleep(interval)
@@ -328,7 +328,7 @@ def main() -> None:
     finally:
         _flush_tracer_provider()
 
-    print("--- Crew output ---")
+    print("--- App output ---")
     print(result)
 
 

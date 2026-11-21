@@ -11,7 +11,7 @@
       "gridPos": {"h": 5, "w": 24, "x": 0, "y": 0},
       "id": 1,
       "options": {
-        "content": "## Gateway proxy metrics (laptop)\n\nThese come from **`python gateway.py`** on **`:9101/metrics`**. They measure **HTTP proxy + tunnel** behavior, not raw vLLM internals. **TTFT** = first upstream byte (streaming) or full response time (non-stream). **TPOT** = mean inter-chunk delay (streaming) or `e2e / completion_tokens` (non-stream). Compare with the **vLLM — prefill vs decode** dashboard for engine-native histograms (`vllm_*` names vary by vLLM version).\n\n**Streaming inter-chunk** panels stay **empty** until at least one **`Accept: text/event-stream`** completion runs through the gateway (Crew/litellm default is non-streaming).\n\n**Labels:** `technique` = `X-Technique` header or `crew.py --technique`. `server_profile` = `VLLM_SERVER_PROFILE` in `.env` (which server config you believe is live). For fair A/B tests, change **vLLM flags** on the GPU, set **`VLLM_SERVER_PROFILE`** to match, restart the gateway, then run Crew.",
+        "content": "## Gateway proxy metrics (laptop)\n\nThese come from **`python gateway.py`** on **`:9101/metrics`**. They measure **HTTP proxy + tunnel** behavior, not raw vLLM internals. **TTFT** = first upstream byte (streaming) or full response time (non-stream). **TPOT** = mean inter-chunk delay (streaming) or `e2e / completion_tokens` (non-stream). Compare with the **vLLM — prefill vs decode** dashboard for engine-native histograms (`vllm_*` names vary by vLLM version).\n\n**Streaming inter-chunk** panels stay **empty** until at least one **`Accept: text/event-stream`** completion runs through the gateway (app.py/litellm default is non-streaming).\n\n**Labels:** `technique` = `X-Technique` header or `app.py --technique`. `server_profile` = `VLLM_SERVER_PROFILE` in `.env` (which server config you believe is live). For fair A/B tests, change **vLLM flags** on the GPU, set **`VLLM_SERVER_PROFILE`** to match, restart the gateway, then run `python app.py`.",
         "mode": "markdown"
       },
       "title": "How to read this board",
@@ -118,7 +118,7 @@
     },
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "description": "Histogram exists only after streaming requests. Non-streaming Crew/curl traffic leaves this empty. Second series shows observation rate (still 0 until streaming).",
+      "description": "Histogram exists only after streaming requests. Non-streaming app.py/curl traffic leaves this empty. Second series shows observation rate (still 0 until streaming).",
       "fieldConfig": {
         "defaults": {"noValue": "No streaming yet", "unit": "s"},
         "overrides": [{"matcher": {"id": "byName", "options": "observations/s (all techniques)"}, "properties": [{"id": "unit", "value": "ops"}, {"id": "custom.axisPlacement", "value": "right"}]}]

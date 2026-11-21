@@ -93,7 +93,7 @@ bash scripts/vllm_engine/baseline.sh
 
 Other **engine-arg** profiles (chunked prefill, prefix caching, speculative, …) live in the same folder; flags follow the [vLLM **Engine arguments**](https://docs.vllm.ai/en/stable/configuration/engine_args/) reference.
 
-**Gateway + Crew cannot “send” engine flags over HTTP.** vLLM reads chunked prefill, prefix cache, speculative config, etc. only at **`vllm serve`** startup. To pick an engine per **`python crew.py --technique …`** without restarting servers between arms, run **one vLLM per port** on the instance and let the gateway route by technique:
+**The gateway and app.py cannot “send” engine flags over HTTP.** vLLM reads chunked prefill, prefix cache, speculative config, etc. only at **`vllm serve`** startup. To pick an engine per **`python app.py --technique …`** without restarting servers between arms, run **one vLLM per port** on the instance and let the gateway route by technique:
 
 1. On the **GPU host:** `bash scripts/vllm_engine/run_engine_fleet.sh` (starts **:8000** … **:8005** with the same flags as the individual `*.sh` scripts). Optional **:8005** needs **`VLLM_SPECULATIVE_CONFIG_JSON`** set first. Several processes on one GPU may OOM for larger models — use a small model or stop processes you are not testing.
 2. On the **laptop:** **`VLLM_BASE_URL=http://127.0.0.1:8000`**, **`VLLM_AUTO_ENGINE_ROUTING=1`** in **`.env`**, restart **`python gateway.py`**. **`GET /health`** lists **`backend_map_keys`** when routing is on.
@@ -143,7 +143,7 @@ You should see JSON with **`"id":"texttinyllama"`**. If this fails, fix Step 6 o
 
 ### Step 9 — On your laptop: configure the project
 
-Use any free tab on the **laptop** (Steps 6–7 must still be running). Go to your **project root** (folder containing `requirements.txt`, `gateway.py`, `crew.py`).
+Use any free tab on the **laptop** (Steps 6–7 must still be running). Go to your **project root** (folder containing `requirements.txt`, `gateway.py`, `app.py`).
 
 ```bash
 cd <path-to-your-repo>
@@ -155,7 +155,7 @@ Edit **`.env`** with at least:
 - **`VLLM_BASE_URL=http://127.0.0.1:8000`** (no trailing slash; requires Step 7).
 - **`VLLM_SERVER_PROFILE=baseline`**
 
-Keep **`GATEWAY_OPENAI_BASE`** on **`http://127.0.0.1:8780/v1`** as in **`.env.example`** if you will use nginx (Step 12). To skip nginx and point Crew at the gateway only, set **`GATEWAY_USE_LOAD_BALANCER=false`** and **`GATEWAY_OPENAI_BASE=http://127.0.0.1:8765/v1`**.
+Keep **`GATEWAY_OPENAI_BASE`** on **`http://127.0.0.1:8780/v1`** as in **`.env.example`** if you will use nginx (Step 12). To skip nginx and point app.py at the gateway only, set **`GATEWAY_USE_LOAD_BALANCER=false`** and **`GATEWAY_OPENAI_BASE=http://127.0.0.1:8765/v1`**.
 
 Optional for **cost metrics** in `.env`: **`LAMBDA_CLOUD_API_KEY=`** (paste key from Lambda dashboard → **API keys**), **`LAMBDA_INSTANCE_TYPE=`** (e.g. `gpu_1x_a10`, or leave empty to infer), **`LAMBDA_COST_USE_API=true`**. Or set **`LAMBDA_COST_USE_API=false`** and use **`GPU_HOURLY_COST_USD`** only. See **`.env.example`**.
 
@@ -230,19 +230,19 @@ If **8780** refuses the connection, Step **12** did not start or the config path
 
 ---
 
-### Step 14 — On your laptop: run Crew
+### Step 14 — On your laptop: run app.py
 
 Steps **6**, **7**, **10**, **12**, and **13** must be good. **`GATEWAY_OPENAI_BASE`** should stay **`http://127.0.0.1:8780/v1`** unless you turned off the LB in **`.env`**.
 
 ```bash
 cd <path-to-your-repo>
 set -a && source .env && set +a
-python crew.py --technique baseline
+python app.py --technique baseline
 ```
 
-Crew waits on **`GET /v1/models`** (see **`CREW_VLLM_WAIT_S`** / **`CREW_VLLM_POLL_S`** in **`.env`**). **`CREW_LLM_STREAM=true`** (default) uses SSE through the gateway.
+app.py waits on **`GET /v1/models`** (see **`CREW_VLLM_WAIT_S`** / **`CREW_VLLM_POLL_S`** in **`.env`**). **`CREW_LLM_STREAM=true`** (default) uses SSE through the gateway.
 
-**Path:** Crew → nginx **8780** → gateway **8765** → tunnel → vLLM. Model name **`texttinyllama`** must match **`--served-model-name`**.
+**Path:** app.py → nginx **8780** → gateway **8765** → tunnel → vLLM. Model name **`texttinyllama`** must match **`--served-model-name`**.
 
 ---
 
@@ -250,7 +250,7 @@ Crew waits on **`GET /v1/models`** (see **`CREW_VLLM_WAIT_S`** / **`CREW_VLLM_PO
 
 Gateway Prometheus text is at **`http://127.0.0.1:9101/metrics`** (`llm_gateway_*` with **`technique`** and **`server_profile`**). A readable summary lives on the gateway app: **`http://127.0.0.1:8765/metrics/summary`**. vLLM engine metrics are on **`http://127.0.0.1:8000/metrics`** via the tunnel. Per-request JSONL defaults to **`logs/gateway/*.jsonl`** (turn off with **`GATEWAY_METRICS_LOG_DIR=-`**). Grafana and Prometheus are Docker-only in this guide.
 
-**Labels:** **`crew.py --technique`** sets **`X-Technique`**. Set **`VLLM_SERVER_PROFILE`** in **`.env`** to match the vLLM you are running; restart **`python gateway.py`** after you change the server.
+**Labels:** **`app.py --technique`** sets **`X-Technique`**. Set **`VLLM_SERVER_PROFILE`** in **`.env`** to match the vLLM you are running; restart **`python gateway.py`** after you change the server.
 
 After editing **`gateway.py`**, restart the gateway. Grafana is **Step 16**.
 
@@ -302,7 +302,7 @@ With the fallback you must **add the Prometheus datasource manually** in Grafana
 
 With Grafana open (time range **Last 1 hour** or **Last 15 minutes**):
 
-1. Send traffic with the Step **13** **`curl`** on **8780**, or run **`python crew.py --technique baseline`** (Step **14**).
+1. Send traffic with the Step **13** **`curl`** on **8780**, or run **`python app.py --technique baseline`** (Step **14**).
 2. Wait one or two **Prometheus scrape intervals** (15s in **`prometheus.yml`**).
 3. Refresh **TinyLlama — GPU, runs & cost** (or wait for auto-refresh).
 
@@ -314,7 +314,7 @@ With Grafana open (time range **Last 1 hour** or **Last 15 minutes**):
 
 ### Step 19 — Different vLLM engine settings (A/B)
 
-Engine flags are documented in [vLLM engine arguments](https://docs.vllm.ai/en/stable/configuration/engine_args/). **`crew.py --technique`** sets **`X-Technique`**; with **`VLLM_AUTO_ENGINE_ROUTING=1`** the gateway maps **`baseline`**, **`chunked_prefill`**, **`prefix_caching`**, **`chunked_prefill_and_prefix_caching`**, **`baseline_strict`**, **`speculative_decoding`**, and **`beam_search`** (same upstream as baseline) to **ports** **8000–8005** derived from **`VLLM_BASE_URL`** (see Step 6 / **`.env.example`**). Run the fleet on the GPU host, multi-port tunnel on the laptop, then e.g. **`python crew.py --technique chunked_prefill`**.
+Engine flags are documented in [vLLM engine arguments](https://docs.vllm.ai/en/stable/configuration/engine_args/). **`app.py --technique`** sets **`X-Technique`**; with **`VLLM_AUTO_ENGINE_ROUTING=1`** the gateway maps **`baseline`**, **`chunked_prefill`**, **`prefix_caching`**, **`chunked_prefill_and_prefix_caching`**, **`baseline_strict`**, **`speculative_decoding`**, and **`beam_search`** (same upstream as baseline) to **ports** **8000–8005** derived from **`VLLM_BASE_URL`** (see Step 6 / **`.env.example`**). Run the fleet on the GPU host, multi-port tunnel on the laptop, then e.g. **`python app.py --technique chunked_prefill`**.
 
 **One process at a time** (no auto routing): on the **GPU**, from repo root (or copy **`scripts/vllm_engine/`** there):
 
@@ -333,9 +333,9 @@ bash scripts/vllm_engine/speculative_decoding.sh
 
 Use **`VLLM_SERVE_PORT=8001`** (etc.) in front of any single-script line when you manage ports manually. Spec JSON must match your vLLM version — see [speculative decoding](https://docs.vllm.ai/en/stable/features/speculative_decoding/).
 
-**Beam** is per-request, not a global serve flag here: run **`python crew.py --technique beam_search`** vs **`baseline`** against the same server.
+**Beam** is per-request, not a global serve flag here: run **`python app.py --technique beam_search`** vs **`baseline`** against the same server.
 
-**After each server config:** set **`VLLM_SERVER_PROFILE`** in **`.env`**, **restart `python gateway.py`**, then run Crew. Compare Grafana by **`server_profile`**.
+**After each server config:** set **`VLLM_SERVER_PROFILE`** in **`.env`**, **restart `python gateway.py`**, then run **`python app.py`**. Compare Grafana by **`server_profile`**.
 
 **Guided A/B** (prints each arm, you restart vLLM + gateway between prompts):
 
@@ -374,7 +374,7 @@ Targets **DOWN**: confirm Steps **6**, **7**, and **10**, then `curl -sS http://
 7. **`502` from `127.0.0.1:8780`** — nginx is up but nothing on **8765**; start Step **10** or fix **`upstream`** in **`nginx-gateway-lb.conf`**.
 8. **Gateway `/health` not `"ok"`** — Fix **`VLLM_BASE_URL`** in **`.env`** (**`http://127.0.0.1:8000`** with the tunnel).
 9. **`Failed to export traces … 4317`** — Start Jaeger (optional below) or set **`OTEL_TRACES_EXPORTER=none`** in **`.env`**.
-10. **Crew LLM errors** — Run Step **13** **`curl …/v1/models`** on **8780** (or Step **11** on **8765** without nginx); confirm tunnel and vLLM.
+10. **app.py LLM errors** — Run Step **13** **`curl …/v1/models`** on **8780** (or Step **11** on **8765** without nginx); confirm tunnel and vLLM.
 11. **`apt full-upgrade` errors on Lambda Stack 24.04** — Known Lambda caveat; see [Lambda base images / troubleshooting](https://docs.lambda.ai/public-cloud/on-demand/#base-images).
 12. **Grafana empty / Prometheus targets red** — **Step 20**; run **`docker compose`** from **`monitoring/`** and keep Steps **6–7–10** running.
 
@@ -388,7 +388,7 @@ Separate from Prometheus (request spans, not histograms). Same **Docker** depend
 docker run -d --name jaeger -p 16686:16686 -p 4317:4317 jaegertracing/all-in-one:latest
 ```
 
-In **`.env`**: **`OTEL_TRACES_EXPORTER=otlp`** and **`OTEL_EXPORTER_OTLP_*=http://127.0.0.1:4317`**. Restart **`python gateway.py`**, run **`python crew.py`**, open **http://127.0.0.1:16686** (services **`crewai`**, **`gateway`**; match **`X-Trace-Id`** from responses).
+In **`.env`**: **`OTEL_TRACES_EXPORTER=otlp`** and **`OTEL_EXPORTER_OTLP_*=http://127.0.0.1:4317`**. Restart **`python gateway.py`**, run **`python app.py`**, open **http://127.0.0.1:16686** (services **`crewai`**, **`gateway`**; match **`X-Trace-Id`** from responses).
 
 ---
 

@@ -32,9 +32,9 @@ if [[ "$MODE" != "sequential" && "$MODE" != "seq" && "$MODE" != "parallel" && "$
   echo "Usage: $0 sequential|parallel"
   echo ""
   echo "  sequential  One vLLM port. For each arm: start vLLM with the printed flags, set"
-  echo "              VLLM_SERVER_PROFILE in .env, restart python gateway.py, press Enter, then Crew runs."
+  echo "              VLLM_SERVER_PROFILE in .env, restart python gateway.py, press Enter, then app.py runs."
   echo "  parallel    Two vLLM ports + VLLM_BACKEND_MAP_JSON (see below). Gateway restarted once;"
-  echo "              script runs crew once per arm technique (hits different URLs)."
+  echo "              script runs app.py once per arm technique (hits different URLs)."
   exit 1
 fi
 
@@ -45,8 +45,8 @@ fi
 
 run_crew() {
   local tech="$1"
-  echo "========== crew --technique $tech =========="
-  python crew.py --technique "$tech" || echo "crew failed (gateway / vLLM / tunnel?)"
+  echo "========== app.py --technique $tech =========="
+  python app.py --technique "$tech" || echo "app.py failed (gateway / vLLM / tunnel?)"
   sleep 2
 }
 
@@ -84,7 +84,7 @@ echo "For each arm you will:"
 echo "  1) Stop previous vLLM on Lambda (if any) and start it with the shown command."
 echo "  2) Confirm SSH tunnel points at the right port."
 echo "  3) Set VLLM_SERVER_PROFILE=<arm profile> in .env, restart python gateway.py (labels metrics)."
-echo "  4) Press Enter here to run the same Crew workload."
+echo "  4) Press Enter here to run the same app.py workload."
 echo ""
 
 for i in $(seq 1 "$AB_ARMS_COUNT"); do

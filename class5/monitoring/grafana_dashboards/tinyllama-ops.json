@@ -10,7 +10,7 @@
   "panels": [
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "description": "**vLLM :8000/metrics** (job `vllm_tunnel`). KV cache fill, decode/TTFT pressure, and throughput — not Crew `--technique` labels. Metric names vary by vLLM version (`vllm:` vs `vllm_`).",
+      "description": "**vLLM :8000/metrics** (job `vllm_tunnel`). KV cache fill, decode/TTFT pressure, and throughput — not `app.py --technique` labels. Metric names vary by vLLM version (`vllm:` vs `vllm_`).",
       "fieldConfig": {
         "defaults": {"unit": "short", "custom": {"drawStyle": "line", "fillOpacity": 8, "spanNulls": false}},
         "overrides": [
@@ -42,7 +42,7 @@
     },
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "description": "**Gateway :9101/metrics** — what each experiment run did: `technique` = `X-Technique` / `crew.py --technique`; `server_profile` = `VLLM_SERVER_PROFILE` in `.env`.",
+      "description": "**Gateway :9101/metrics** — what each experiment run did: `technique` = `X-Technique` / `app.py --technique`; `server_profile` = `VLLM_SERVER_PROFILE` in `.env`.",
       "fieldConfig": {
         "defaults": {"unit": "short", "custom": {"drawStyle": "line", "fillOpacity": 8}},
         "overrides": [

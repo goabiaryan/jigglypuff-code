@@ -10,7 +10,7 @@
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "gridPos": {"h": 7, "w": 24, "x": 0, "y": 0},
       "id": 1,
-      "options": {"content": "## vLLM overview (engine-native metrics)\n\n**vLLM 0.13+** exposes OpenMetrics-style names with a **`vllm:`** prefix (e.g. `vllm:request_prefill_time_seconds_bucket`), scraped from **`:8000/metrics`**. Older builds used **`vllm_`** underscores — adjust in **Explore** if needed.\n\n**Decode panel** uses **`vllm:inter_token_latency_seconds`** (per autoregressive step); there is no separate `request_decode` histogram in current vLLM exports.\n\n**Speculative decode panel (below):** shows **`vllm:spec_decode_*`** from the **vLLM process only**. It is **not** tied to Crew/gateway **`--technique speculative_decoding`** or **`combined`** — those names are just **`X-Technique`** labels on gateway logs and `llm_gateway_*`. If this panel is empty, vLLM was almost certainly **not** launched with speculative decoding enabled (no draft model / spec flags), so the engine never exports these series. Confirm with `curl -sS :8000/metrics | grep -i spec_decode` on the tunnel.\n\n**Gateway** metrics (`llm_gateway_*`): dashboard **Gateway — proxy timings + cost** (per-technique request rates, latency, cost).\n\n**Jaeger:** **`X-Trace-Id`**.", "mode": "markdown"},
+      "options": {"content": "## vLLM overview (engine-native metrics)\n\n**vLLM 0.13+** exposes OpenMetrics-style names with a **`vllm:`** prefix (e.g. `vllm:request_prefill_time_seconds_bucket`), scraped from **`:8000/metrics`**. Older builds used **`vllm_`** underscores — adjust in **Explore** if needed.\n\n**Decode panel** uses **`vllm:inter_token_latency_seconds`** (per autoregressive step); there is no separate `request_decode` histogram in current vLLM exports.\n\n**Speculative decode panel (below):** shows **`vllm:spec_decode_*`** from the **vLLM process only**. It is **not** tied to app.py/gateway **`--technique speculative_decoding`** or **`combined`** — those names are just **`X-Technique`** labels on gateway logs and `llm_gateway_*`. If this panel is empty, vLLM was almost certainly **not** launched with speculative decoding enabled (no draft model / spec flags), so the engine never exports these series. Confirm with `curl -sS :8000/metrics | grep -i spec_decode` on the tunnel.\n\n**Gateway** metrics (`llm_gateway_*`): dashboard **Gateway — proxy timings + cost** (per-technique request rates, latency, cost).\n\n**Jaeger:** **`X-Trace-Id`**.", "mode": "markdown"},
       "title": "Notes",
       "type": "text"
     },
@@ -101,7 +101,7 @@
     },
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "description": "Engine metrics from vLLM :8000/metrics — not from gateway X-Technique. Empty if vLLM was not started with speculative decoding (draft/spec flags). Crew labels like speculative_decoding or combined only tag llm_gateway_* / JSONL; they do not turn this on.",
+      "description": "Engine metrics from vLLM :8000/metrics — not from gateway X-Technique. Empty if vLLM was not started with speculative decoding (draft/spec flags). app.py labels like speculative_decoding or combined only tag llm_gateway_* / JSONL; they do not turn this on.",
       "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}, "overrides": []},
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 23},
       "id": 7,

@@ -24,14 +24,14 @@ TECHS=(
   combined
 )
 
-echo "=== Comparison run: same crew for each --technique label ==="
+echo "=== Comparison run: same app.py workload for each --technique label ==="
 echo "For fair server-side compares, vLLM flags must match each arm (see README Step 17)."
 echo ""
 
 for t in "${TECHS[@]}"; do
-  echo "========== crew --technique $t =========="
+  echo "========== app.py --technique $t =========="
   echo "Metrics label technique=${t} (X-Technique header). server_profile comes from VLLM_SERVER_PROFILE in .env only."
-  python crew.py --technique "$t" || echo "crew failed for $t (check gateway, .env, tunnel, vLLM)"
+  python app.py --technique "$t" || echo "app.py failed for $t (check gateway, .env, tunnel, vLLM)"
   sleep 2
 done
 
