@@ -1,0 +1,30 @@
+# monitoring/prometheus.yml — laptop scrape targets (Lambda vLLM via SSH tunnel).
+# Linux Docker: docker-compose in this folder sets extra_hosts for host.docker.internal.
+#
+# Gateway: /metrics on GATEWAY_METRICS_PORT (default 9101) — opened on FastAPI startup (python gateway.py or uvicorn gateway:app).
+# vLLM: /metrics on the same port as the OpenAI API (8000 with README tunnel).
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: gateway
+    static_configs:
+      - targets: ["host.docker.internal:9101"]
+    metrics_path: /metrics
+
+  # vLLM on laptop localhost:8000 via SSH tunnel (Prometheus in Docker → host.docker.internal)
+  - job_name: vllm_tunnel
+    scheme: http
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+    metrics_path: /metrics
+
+  # Optional: engine fleet (scripts/vllm_engine/run_engine_fleet.sh) + multi-port tunnel — duplicate this job
+  # per port or use static_configs.targets: ["host.docker.internal:8001", ...] with relabel if needed.
+  # - job_name: vllm_tunnel_8001
+  #   scheme: http
+  #   static_configs:
+  #     - targets: ["host.docker.internal:8001"]
+  #   metrics_path: /metrics
