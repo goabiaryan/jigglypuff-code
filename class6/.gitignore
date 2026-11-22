@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+results.json
+results.html
+bench/results.json
+bench/results.html
+*.egg-info/
+.DS_Store
